@@ -612,3 +612,233 @@ fn dangle() -> &String {
     &s // error, dangling reference
 }
 ```
+
+## 4.3 The Slice Type
+
+### String Slices
+
+A _string slice_ is a reference to part of a `String`, and it looks like this:
+
+```rust
+let s = String::from("hello world");
+
+let hello = &s[0..5]; // or `&s[..5]`
+let world = &s[6..11]; // or `&s[6..]`
+let hello_world = &s[0..11]; // or &s[..]
+```
+
+![A *string slice* is a reference to part of a `String`](README.d/images/trpl04-06.svg)
+
+> Note: String slice range indices must occur at valid UTF-8 character boundaries.
+
+Slices can establish robust connection between logic:
+
+```rust
+fn first_word(s: &String) -> &str {
+    let bytes = s.as_bytes();
+
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    &s[..]
+}
+
+
+fn main() {
+    let mut s = String::from("hello world");
+
+    let word = first_word(&s);
+
+    s.clear(); // error! `&mut self` overlap with `word`
+
+    println!("the first word is: {}", word);
+}
+```
+
+### String Literals are Slices
+
+String literals are stored inside the binary.
+
+```rust
+let s = "Hello, world!";
+```
+
+The type of `s` here is `&str`: it’s a slice pointing to that specific point of the binary. This is also why string literals are immutable; `&str` is an immutable reference.
+
+### String Slices as Parameters
+
+Using `&str` as parameters can take both string literals and `&String` values as arguments. This is a improvement on `first_word`:
+
+```rust
+fn first_word(s: &str) -> &str {
+```
+
+### Other Slices
+
+Slices are not specific to strings. All sorts of other collections has slices, such as:
+
+```rust
+let a = [1, 2, 3, 4, 5]; // [i32; 5]
+
+let slice = &a[1..3]; // &[i32]
+```
+
+# 5. Using Structs to Structure Related Data
+
+A _struct_, or _structure_, is a custom data type that lets you name and package together multiple related values that make up a meaningful group.
+
+## 5.1 Defining and Instantiating Structs
+
+Structs are more flexible than tuples in ways that they don’t have to rely on the order of the _fields_ to specify or access the values of an _instance_.
+
+```rust
+#[derive(Debug)]
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+fn build_user(email: String, username: String) -> User {
+    User {
+        email,
+        username,
+        active: true,
+        sign_in_count: 1,
+    }
+}
+fn main() {
+    let user1 = User {
+        email: String::from("user1@example.com"),
+        username: String::from("user1"),
+        active: true,
+        sign_in_count: 1,
+    };
+    // all fiels are mutable
+    let mut user2 = User {
+        email: String::from("user2@example.com"),
+        username: String::from("user2"),
+        ..user1 // the last line and no comma
+    };
+    user2.email = user1.email;
+    let user3 = build_user(String::from("email@example.com"), String::from("user"));
+    println!("{:?}", user3);
+    println!("{:#?}", user3);
+}
+```
+
+### Tuple Structs and Unit-Like Structs
+
+```rust
+// tuple structs
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+let black = Color(0, 0, 0);
+let origin = Point(0, 0, 0);
+
+// unit-like structs
+struct V4;
+struct V6;
+```
+
+## 5.2 An Example Program Using Structs
+
+```rust
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle { width: 30, height: 50 };
+
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        area(&rect1)
+    );
+}
+
+fn area(rectangle: &Rectangle) -> u32 {
+    rectangle.width * rectangle.height
+}
+```
+
+## 5.3 Method Syntax
+
+_Methods_ are similar to functions: define in `impl` block and their first parameter is always `&self`, `&mut selt` or `self`.
+
+```rust
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle { width: 30, height: 50 };
+
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        rect1.area()
+    );
+}
+```
+
+### Methods with More Parameters
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+```
+
+### Associated Functions
+
+_Associated functions:_ define within `impl` blocks but don't take `self` as a parameter, such as `String::from`.
+
+```rust
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { width: size, height: size }
+    }
+}
+
+let sq = Rectangle::square(3);
+```
+
+### Multiple `impl` Blocks
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+impl Rectangle {
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { width: size, height: size }
+    }
+}
+```
