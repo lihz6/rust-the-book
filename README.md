@@ -842,3 +842,159 @@ impl Rectangle {
     }
 }
 ```
+
+# 6. Enums and Pattern Matching
+
+## 6.1 Defining an Enum
+
+_Enums_ are namespaces for defining all possible struct types. Instead of:
+
+```rust
+struct QuitMessage; // unit struct
+struct MoveMessage {
+    x: i32,
+    y: i32,
+}
+struct WriteMessage(String); // tuple struct
+struct ChangeColorMessage(i32, i32, i32); // tuple struct
+```
+
+This is more concise and encodes more information together:
+
+```rust
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+```
+
+And we would easily define a method to take any of these kinds of messages:
+
+```rust
+impl Message {
+    fn call(&self) {
+        // method body would be defined here
+    }
+}
+
+let m = Message::Write(String::from("hello"));
+m.call();
+```
+
+### The `Option` Enum and It's Advantages over Null Values
+
+In times a value could be something or nothing, the compiler should check whether both cases are handled properly. The problem with null values is that the compiler can't tell whether you try to use a null value as a not-null value, so you are on your own to make errors.
+
+However, the concept that null is trying to express is still a useful one: a null is a value that is currently invalid or absent for some reason.
+
+The problem isn’t really with the concept but with the particular implementation. As such, Rust does not have nulls, but it does have an enum that can encode the concept of a value being present or absent. This enum is `Option<T>`, and it is defined by [the standard library](https://doc.rust-lang.org/std/option/enum.Option.html) as follows:
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+
+> Tip: `Option<T>` is included in the prelude, so are its variants `Some` and `None` using directly without the `Option::` prefix.
+
+## 6.2 The `match` Control Flow Operator
+
+`match` is an extremely powerful tool that allow a value compare against a series of patterns and then execute code based on which pattern matches. Patterns can be made up of literal values, variable names, wildcards, and many other things. Not only that, the compiler confirms that all possible patterns are handled.
+
+```rust
+#[derive(Debug)] // so we can inspect the state in a minute
+enum UsState {
+    Alabama,
+    Alaska,
+    // --snip--
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+
+fn value_in_cents(coin: Coin) -> u8 {
+    match coin {
+        // an arm: a pattern and some code
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        // extract values out of enum variants
+        Coin::Quarter(state) => {
+            println!("State quarter from {:?}!", state);
+            25
+        },
+    }
+}
+```
+
+### Matching with `Option<T>`
+
+```rust
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+
+let five = Some(5);
+let six = plus_one(five);
+let none = plus_one(None);
+```
+
+### The `_` Placeholder
+
+Matches are axhaustive: we must exhaust every last possibility in order for the code to be valid. When we don't want to list all possible patterns, we can use the special pattern `_`:
+
+```rust
+let some_u8_value = 0u8;
+match some_u8_value {
+    1 => println!("one"),
+    3 => println!("three"),
+    5 => println!("five"),
+    7 => println!("seven"),
+    _ => (), // without this arm compile error
+}
+```
+
+## 6.3 Concise Control Flow with `if let`
+
+Sometimes the `match` expression can be a bit wordy:
+
+```rust
+let some_u8_value = Some(0u8);
+match some_u8_value {
+    Some(3) => println!("three"),
+    _ => (),
+}
+```
+
+Instead, we could write this in a shorter way using `if let`:
+
+```rust
+if let Some(3) = some_u8_value {
+    println!("three");
+}
+```
+
+> Note: `if let` loses the exhaustive checking that match enforces.
+
+More clauses are valid:
+
+```rust
+let some_u8_value = 0u8;
+if let 1 = some_u8_value {
+    println!("one");
+} else if let 3 = some_u8_value {
+    println!("three");
+} else {
+    println!("{}", some_u8_value);
+}
+```
