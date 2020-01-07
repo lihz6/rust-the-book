@@ -37,10 +37,10 @@ $ rustup doc --std
 $ mkdir hello_world
 $ cd hello_world
 $ cat <<EOF >main.ts
-> fn main() {
->     println!("Hello, world!");
-> }
-> EOF
+fn main() {
+    println!("Hello, world!");
+}
+EOF
 ```
 
 ### Compiling
