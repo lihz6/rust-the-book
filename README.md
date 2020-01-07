@@ -254,6 +254,34 @@ let second = a[1];
 
 ## 3.3 How Functions work
 
+- definitions, with new names side effect:
+  - `let`
+  - `const`
+  - `fn`
+  - `struct`
+  - `enum`
+  - `union`
+  - `impl`
+  - `trait`
+  - `mod`
+  - `use`
+  - `macro_rules!`
+  - TODO...
+- statements, evaluating to `()`:
+  - `for in`
+  - `while`
+  - `a = 1;`
+  - `1;`
+  - `{}`
+  - `{ 1; }`
+- expressions, not evaluating to `()`:
+  - `if else`
+  - `match`
+  - `loop`
+  - `1`
+  - `add(1, 2)`
+  - `{ 1 + 2 } * 3`
+
 ### How blocks work
 
 - Cannot declare variables in `mod` level block.
