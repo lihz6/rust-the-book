@@ -2,28 +2,18 @@
 
 ## 1.1 Installation
 
-### Installing
-
 ```bash
+# installing
 $ curl https://sh.rustup.rs -sSf | sh
-$ source $HOME/.cargo/env
-```
+$ . ~/.cargo/env
 
-### Updating
-
-```bash
+# updating
 $ rustup update
-```
 
-### Uninstalling
-
-```bash
+# uninstalling
 $ rustup self uninstall
-```
 
-### Local documentation
-
-```bash
+# documentation
 $ rustup doc
 $ rustup doc --book
 $ rustup doc --std
@@ -31,9 +21,8 @@ $ rustup doc --std
 
 ## 1.2 Hello, world!
 
-### Creating
-
 ```bash
+# creating
 $ mkdir hello_world
 $ cd hello_world
 $ cat <<EOF >main.ts
@@ -41,61 +30,56 @@ fn main() {
     println!("Hello, world!");
 }
 EOF
-```
 
-### Compiling
-
-```bash
+# compiling
 $ rustc main.ts
-```
 
-### Running
-
-```bash
+# running
 $ ./main
 ```
 
 ## 1.3 Hello, Cargo!
 
-### Creating
-
 ```bash
+# creating
 $ cargo new hello_cargo
 $ cd hello_cargo
-```
 
-```bash
 $ mkdir hello_cargo
 $ cd hello_cargo
 $ cargo init
-```
 
-### Build and run
+# build
+$ cargo build
 
-```bash
+# check
+$ cargo check
+
+# format
+$ cargo fmt
+
+# build and run
 $ cargo run
-Hello, Cargo!
-```
 
-### Build for release
-
-```bash
+# build for release
 $ cargo build --release
 ```
+
+> For more information about Cargo, check out [its documentation](https://doc.rust-lang.org/cargo/).
 
 # 2. Programming a Guessing Game
 
 ## Use external crates
 
-### Step 1: modify `the Cargo.toml`
+### Step 1: modify the `Cargo.toml`
 
 ```toml
 [dependencies]
 
-rand = "0.3.14"
+rand = "0.7.2"
 ```
 
-> Note: `0.3.14` is shorthand for `^0.3.14`.
+> Note: `0.7.2` is shorthand for `^0.7.2`. See also [cargo-edit](https://github.com/killercup/cargo-edit).
 
 ### Step 2: build the project
 
@@ -109,46 +93,35 @@ $ cargo build
 
 ```bash
 $ cargo update
-    Updating crates.io index
 ```
 
 ## Complete guessing game code
 
-Filename: src/main.rs
+Filename: `src/main.rs`
 
 ```rust
-use std::cmp::Ordering;
-use std::io;
+use std::cmp::Ordering::{Equal, Greater, Less};
 use rand::Rng;
 
 fn main() {
-    println!("Guess the number!");
-
-    let secret_number = rand::thread_rng().gen_range(1, 101);
-
+    let secret = rand::thread_rng().gen_range(1, 101);
     loop {
-        println!("Please input your guess.");
-
         let mut guess = String::new();
-
-        io::stdin().read_line(&mut guess)
-            .expect("Failed to read line");
-
-        let guess: u32 = match guess.trim().parse() {
+        std::io::stdin()
+            .read_line(&mut guess)
+            .expect("Read failed.");
+        let guess: i32 = match guess.trim().parse() {
             Err(_) => continue,
             Ok(n) => n,
         };
-
-        println!("You guessed: {}", guess);
-
-        match guess.cmp(&secret_number) {
-            Ordering::Greater => println!("Too big!"),
-            Ordering::Less => println!("Too small!"),
-            Ordering::Equal => {
+        match guess.cmp(&secret) {
+            Greater => println!("Too large!"),
+            Less => println!("Too small!"),
+            Equal => {
                 println!("You win!");
                 break;
             }
-        }
+        };
     }
 }
 ```
@@ -162,6 +135,8 @@ Variables, functions, structs, lots of things, all of these things need identifi
 - `/[a-z][_a-z0-9]*/i`
 - `/_[_a-z0-9]+/i`
 
+> Note: `_` is _NOT_ an identifier.
+
 Identifiers cannot be keywords, unless use a “raw identifier”. Raw identifiers start with `r#`:
 
 ```rust
@@ -171,9 +146,11 @@ let r#fn = "this variable is named 'fn' even though that's a keyword";
 r#match();
 ```
 
+> Note: Use only for compatible purpose, when new keywords added.
+
 ## 3.1 Variables and Mutability
 
-### Use _snake case_ naming convention
+### Use _snake_case_ naming convention
 
 ```rust
 let max_score = 0;
@@ -216,15 +193,13 @@ let x = x.len();
 ## 3.2 Data Types
 
 - Scalar Types
-  - Integer Types
-  - Floating-Point Types
-    - `f64`
-      - `let x = 3.0;`
-      - `let x = 1.0f64`
-      - `let x: f64 = 1.0`
-    - `f32`
-      - `let x = 1.0f32`
-      - `let x: f32 = 1.0`
+  - Integer Types `{i,u}{8,16,32,64,128,size}`
+    - `{2_000,0xff,0o77,0b111_000}{i,u}{8,16,32,64,128,size}`
+    - `{2_000,0xff,0o77,0b111_000}` infer from first usage.
+    - `b'A'` Byte (`u8` only)
+  - Floating-Point Types `f{32,64}`
+    - `{1.0,1.0e-3}f{32,64}`
+    - `{1.0,1.0e-3}` infer from first usage.
   - The Boolean Type `bool`
     - `false`
     - `true`
@@ -235,31 +210,10 @@ let x = x.len();
     - The Tuple Type
     - The Array Type
 
-### Integer types
-
-| Length  | Signed | Unsigned |
-| :-----: | :----: | :------: |
-|  8-bit  |   i8   |    u8    |
-| 16-bit  |  i16   |   u16    |
-| 32-bit  |  i32   |   u32    |
-| 64-bit  |  i64   |   u64    |
-| 128-bit |  i128  |   u128   |
-|  arch   | isize  |  usize   |
-
-### Integer literals
-
-| Number literals |    Example    |
-| :-------------: | :-----------: |
-|     Decimal     |   `98_222`    |
-|       Hex       |    `0xff`     |
-|      Octal      |    `0o77`     |
-|     Binary      | `0b1111_0000` |
-| Byte(`u8` only) |    `b'A'`     |
-
 ### Integer variable declaration
 
 ```rust
-let x = 32; // i32
+let x = 32;
 let a: u32 = 16;
 let b = 32i8;
 let c = b'A'; // `u8` only
@@ -320,7 +274,7 @@ let second = a[1];
 
 ### How to use functions
 
-- Use _snake case_ naming convention.
+- Use _snake_case_ naming convention.
 - Must declare parameters type if have any.
 - Need to explicitly declare return type unless `()`.
 - Always return a value or `()`.
