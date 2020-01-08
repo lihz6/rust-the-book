@@ -487,6 +487,8 @@ Here are some of the types that are `Copy`, with a known, fixed size:
 - Array of `Copy`, such as `[1, 2, 3]`.
 - Slices, such `&str`, `&[32]`
 
+> Note: Understanding `Copy`, `Clone`, `Drop`.
+
 ### Ownership and Funtions
 
 The semantics for passing a value to a function are similar to those for assigning a value to a variable. Passing a variable to a function will move or copy, just as assignment does. So without references and borrowing, this what happens:
