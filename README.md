@@ -257,6 +257,7 @@ let second = a[1];
 - definitions, with new names side effect:
   - `let`
   - `const`
+  - `static`
   - `fn`
   - `struct`
   - `enum`
@@ -266,7 +267,6 @@ let second = a[1];
   - `mod`
   - `use`
   - `macro_rules!`
-  - TODO...
 - statements, evaluating to `()`:
   - `for in`
   - `while`
@@ -446,8 +446,7 @@ Keeping track of what parts of code are using what data on the heap, minimizing 
 - A value is bound to a variable.
 - There can only be one owner at a time.
 - When a value is assigned to another variable:
-  - if the value owns data, it's moved,
-  - otherwise, it's copied.
+  - if it's not `Copy`, it's moved,
 - When the owner goes out of scope, the block of data will be dropped.
 
 ```rust
@@ -546,7 +545,7 @@ fn change(some_string: &mut String) {
 }
 ```
 
-Mutable references can make changes to the original values, but have one big restriction **to prevent data race at compile time**: a mutable reference **can't overlab** with another referenct to the same value in a particular scope. These code will fail:
+Mutable references can make changes to the original values, but have one big restriction **to prevent data race at compile time**: a mutable reference **can't overlab** with another reference to the same value in a particular scope. These code will fail:
 
 ```rust
 let mut s = String::from("hello");
