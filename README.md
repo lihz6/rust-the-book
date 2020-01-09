@@ -465,7 +465,32 @@ let s2 = s1;
 println!("{}, world!", s1); // error
 ```
 
-![`s1` is moved into `s2`](README.d/images/trpl04-04.svg)
+```
+`s1` is moved into `s2`
+    ┌──────────────────┐
+    │////////s1////////│
+    ├──────────┬───────┤
+    │///name///│/value/│
+    ├──────────┼───────┤
+    │///ptr////│///////├────┐    ┌───────┬───────┐
+    ├──────────┼───────┤    │    │ index │ value │
+    │///len////│///5///│    │    ├───────┼───────┤
+    ├──────────┼───────┤    ├───>│   0   │   h   │
+    │/capacity/│///5///│    │    ├───────┼───────┤
+    └──────────┴───────┘    │    │   1   │   e   │
+                            │    ├───────┼───────┤
+    ┌──────────────────┐    │    │   2   │   l   │
+    │        s2        │    │    ├───────┼───────┤
+    ├──────────┬───────┤    │    │   3   │   l   │
+    │   name   │ value │    │    ├───────┼───────┤
+    ├──────────┼───────┤    │    │   4   │   o   │
+    │   ptr    │       ├────┘    └───────┴───────┘
+    ├──────────┼───────┤
+    │   len    │   5   │
+    ├──────────┼───────┤
+    │ capacity │   5   │
+    └──────────┴───────┘
+```
 
 ```rust
 let s1 = String::from("hello");
@@ -529,7 +554,32 @@ The reference operator `&` can creact a _reference_ that refers to a value. When
 
 Having references as function parameters but without taking ownership is called _borrowing_.
 
-![`s` won't take the ownership from `s1`](README.d/images/trpl04-05.svg)
+```
+`s` won't take the ownership from `s1`
+         ┌──────────────────┐
+         │         s        │
+         ├──────────┬───────┤
+         │   ptr    │       │
+         └──────────┴───┬───┘
+                        │
+    ┌───────────────────┘
+    │
+    │    ┌──────────────────┐
+    │    │        s1        │
+    │    ├──────────┬───────┤    ┌───────┬───────┐
+    │    │   name   │ value │    │ index │ value │
+    │    ├──────────┼───────┤    ├───────┼───────┤
+    └───>│   ptr    │       ├───>│   0   │   h   │
+         ├──────────┼───────┤    ├───────┼───────┤
+         │   len    │   5   │    │   1   │   e   │
+         ├──────────┼───────┤    ├───────┼───────┤
+         │ capacity │   5   │    │   2   │   l   │
+         └──────────┴───────┘    ├───────┼───────┤
+                                 │   3   │   l   │
+                                 ├───────┼───────┤
+                                 │   4   │   o   │
+                                 └───────┴───────┘
+```
 
 > Note: The opposite of referencing by using `&` is _dereferencing_, which is accomplished with the dereference operator, `*`.
 
@@ -610,7 +660,34 @@ let world = &s[6..11]; // or `&s[6..]`
 let hello_world = &s[0..11]; // or &s[..]
 ```
 
-![A *string slice* is a reference to part of a `String`](README.d/images/trpl04-06.svg)
+```
+A *string slice* is a reference to part of a `String`
+                                 ┌───────┬───────┐
+                                 │ index │ value │
+    ┌──────────────────┐         ├───────┼───────┤
+    │         s        │    ┌───>│   0   │   h   │
+    ├──────────┬───────┤    │    ├───────┼───────┤
+    │   name   │ value │    │    │   1   │   e   │
+    ├──────────┼───────┤    │    ├───────┼───────┤
+    │   ptr    │       ├────┘    │   2   │   l   │
+    ├──────────┼───────┤         ├───────┼───────┤
+    │   len    │   5   │         │   3   │   l   │
+    ├──────────┼───────┤         ├───────┼───────┤
+    │ capacity │   5   │         │   4   │   o   │
+    └──────────┴───────┘         ├───────┼───────┤
+                                 │   5   │       │
+    ┌──────────────────┐         ├───────┼───────┤
+    │      world       │    ┌───>│   6   │   w   │
+    ├──────────┬───────┤    │    ├───────┼───────┤
+    │   name   │ value │    │    │   7   │   o   │
+    ├──────────┼───────┤    │    ├───────┼───────┤
+    │   ptr    │       ├────┘    │   8   │   r   │
+    ├──────────┼───────┤         ├───────┼───────┤
+    │   len    │   5   │         │   9   │   l   │
+    └──────────┴───────┘         ├───────┼───────┤
+                                 │   10  │   d   │
+                                 └───────┴───────┘
+```
 
 > Note: String slice range indices must occur at valid UTF-8 character boundaries.
 
