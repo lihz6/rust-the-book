@@ -1247,3 +1247,46 @@ For `<module.rs>`, where lives `mod <identifier>;`:
 - [Storing Lists of Values with Vectors](https://doc.rust-lang.org/std/vec/struct.Vec.html)
 - [Storing UTF-8 Encoded Text with Strings](https://doc.rust-lang.org/std/string/struct.String.html)
 - [Storing Keys with Associated Values in Hash Maps](https://doc.rust-lang.org/std/collections/struct.HashMap.html)
+
+# 9. Error Handling
+
+## 9.1 Unrecoverable Errors with `panic!`
+
+```rust
+fn main() {
+    panic!("crash and burn");
+}
+```
+
+## 9.2 Recoverable Errors with Result
+
+```rust
+use std::fs::File;
+use std::io::{self, Read};
+
+fn read_username_from_file() -> io::Result<String> {
+    let mut s = String::new();
+
+    File::open("hello.txt")?.read_to_string(&mut s)?;
+
+    Ok(s)
+}
+
+fn main() -> io::Result<()> {
+    let s = read_username_from_file()?;
+
+    Ok(())
+}
+```
+
+## 9.3 To `panic!` or Not to `panic!`
+
+- Returning `Result` is a good default choice.
+- `panic!` when the code could end up in a bad state.
+
+How to handle `Result`:
+
+- `.unwrap()` when you're smarter than the complier.
+- `.expect("TODO: ...")` when prototyping.
+- `.expect("...")` when testing.
+- `?` propagating.
