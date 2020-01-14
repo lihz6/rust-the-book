@@ -1058,3 +1058,186 @@ if let 1 = some_u8_value {
     println!("{}", some_u8_value);
 }
 ```
+
+# 7. Packages, Crates and Modules
+
+The Rust module system:
+
+- **Workspaces**
+- **Packages**
+- **Crates**
+- **Modules**
+  - **`mod`**
+  - **`pub`**
+- **Paths:**
+  - **`crate`**
+  - **`super`**
+  - **`self`**
+  - **`::`**
+- **`use`**
+  - **`as`**
+  - **`{self, ...}`**
+  - **`*`**
+- **`pub use`**
+- **Items**
+  - **`const`** constants
+  - **`fn`** functions
+  - **`mod`** modules
+  - **`impl`** methods
+  - **`struct`** structs
+  - **`trait`** traits
+  - **`enum`** enums
+
+## 7.1 Packages and Crates
+
+```
+package
+├── Cargo.lock
+├── Cargo.toml
+└── src
+    ├── bin
+    │   ├── bincrate1.rs
+    │   ├── bincrate2.rs
+    │   └── ...
+    ├── lib.rs
+    └── main.rs
+```
+
+A crate is a binary or library. The _crate root_ is a source file that the Rust compiler starts from and makes up the root module of the crate. A package is one or more crates that provide a set of functionality. A package contains a `Cargo.toml` file that describes how to build those crates.
+
+A package must contain zero or one library crates, and no more. It can contain as many binary crates as you’d like, but it must contain at least one crate (either library or binary).
+
+## 7.2 Defining Modules to Control Scope and Privacy
+
+Filename: `src/lib.rs`
+
+```rust
+mod front_of_house {
+    mod hosting {
+        fn add_to_waitlist() {}
+
+        fn seat_at_table() {}
+    }
+
+    mod serving {
+        fn take_order() {}
+
+        fn serve_order() {}
+
+        fn take_payment() {}
+    }
+}
+```
+
+The module tree:
+
+```
+crate
+ └── front_of_house
+     ├── hosting
+     │   ├── add_to_waitlist
+     │   └── seat_at_table
+     └── serving
+         ├── take_order
+         ├── serve_order
+         └── take_payment
+```
+
+## 7.3 Paths for Referring to an Item in the Module Tree
+
+A path can take two forms:
+
+- An absolute path starts with:
+  - `crate`: `~`
+  - `::`: `/`
+- A relative path starts:
+  - `super`: `..`
+  - `self`: `.`
+
+> Note: When starting with an `<identifier>`, first try `self::<identifier>`, then `::<identifier>`.
+
+### Exposing Paths with the `pub` Keyword
+
+```rust
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // Absolute path
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // Relative path
+    front_of_house::hosting::add_to_waitlist();
+}
+```
+
+### Starting Relative Paths with `super`
+
+```rust
+fn serve_order() {}
+
+mod back_of_house {
+    fn fix_incorrect_order() {
+        cook_order();
+        super::serve_order();
+    }
+
+    fn cook_order() {}
+}
+```
+
+### Making Structs and Enums Public
+
+```rust
+mod back_of_house {
+    pub struct Breakfast {
+        pub toast: String,
+        seasonal_fruit: String,
+    }
+
+    impl Breakfast {
+        pub fn summer(toast: &str) -> Breakfast {
+            Breakfast {
+                toast: String::from(toast),
+                seasonal_fruit: String::from("peaches"),
+            }
+        }
+    }
+}
+```
+
+```rust
+mod back_of_house {
+    pub enum Appetizer {
+        Salad,
+        Soup,
+    }
+}
+```
+
+## 7.4 Bringing Paths into Scope with the use Keyword
+
+```rust
+use crate::front_of_house::hosting;
+use std::collections::HashMap;
+use std::io::Result as IoResult;
+pub use crate::front_of_house::hosting;
+use std::io::{self, Write};
+use std::collections::*;
+```
+
+## 7.5 Separating Modules into Different Files
+
+For `main.rs`, `lib.rs`, `bin/*.rs`, and `mod.rs`, where lives `mod <identifier>;`:
+
+- `./<identifier>.rs`
+- `./<identifier>/mod.rs`
+
+For `<module.rs>`, where lives `mod <identifier>;`:
+
+- `./<module>/<identifier>.rs`
+
+> Note: Either `./<identifier>.rs` or `./<identifier>/mod.rs`, can't both exist.
