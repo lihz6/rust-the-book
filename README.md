@@ -1241,3 +1241,9 @@ For `<module.rs>`, where lives `mod <identifier>;`:
 - `./<module>/<identifier>.rs`
 
 > Note: Either `./<identifier>.rs` or `./<identifier>/mod.rs`, can't both exist.
+
+# 8. Common Collections
+
+- [Storing Lists of Values with Vectors](https://doc.rust-lang.org/std/vec/struct.Vec.html)
+- [Storing UTF-8 Encoded Text with Strings](https://doc.rust-lang.org/std/string/struct.String.html)
+- [Storing Keys with Associated Values in Hash Maps](https://doc.rust-lang.org/std/collections/struct.HashMap.html)
