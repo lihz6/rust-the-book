@@ -1290,3 +1290,273 @@ How to handle `Result`:
 - `.expect("TODO: ...")` when prototyping.
 - `.expect("...")` when testing.
 - `?` propagating.
+
+# 10. Generic Types, Traits, and Lifetimes
+
+1. Use functions to reduce code duplication.
+2. Use generic types to define a generic function.
+3. Use generic types in struct and enum definitions.
+4. Use _traits_ to define behaviors in a generic way.
+5. Use traits to constrain a generic type's behaviors.
+6. Use _lifetimes_ to tell how references relate to each other.
+7. Use lifetimes to check that the references are valid.
+
+## 10.1 Generic Data Types
+
+```rust
+// NOTE: not compile yet, traits bound missing.
+fn largest<T>(list: &[T]) -> T {
+    let mut largest = list[0];
+
+    for &item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+```
+
+```rust
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    fn mixup<V, W>(self, other: Point<V, W>) -> Point<T, W> {
+        Point {
+            x: self.x,
+            y: other.y,
+        }
+    }
+}
+```
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+## 10.2 Traits: Defining Shared Behavior
+
+```rust
+trait Summary {
+    fn summarize_author(&self) -> String;
+
+    fn summarize(&self) -> String {
+        format!("(Read more from {}...)", self.summarize_author())
+    }
+}
+
+struct NewsArticle {
+    pub headline: String,
+    pub location: String,
+    pub author: String,
+    pub content: String,
+}
+
+impl Summary for NewsArticle {
+    fn summarize_author(&self) -> String {
+        format!("@{}", self.author)
+    }
+    fn summarize(&self) -> String {
+        format!("{}, by {} ({})", self.headline, self.author, self.location)
+    }
+}
+
+struct Tweet {
+    pub username: String,
+    pub content: String,
+    pub reply: bool,
+    pub retweet: bool,
+}
+
+impl Summary for Tweet {
+    fn summarize_author(&self) -> String {
+        format!("@{}", self.username)
+    }
+}
+```
+
+> NOTE: We can implement a trait on a type only if either the trait or the type is local to our crate. But we can’t implement external traits on external types.
+
+### Traits as Parameters
+
+```rust
+fn notify(item1: impl Summary, item2: impl Summary) {
+// is same as:
+fn notify<T: Summary, U: Summary>(item1: T, item2: U) {
+// is same as:
+fn notify<T, U>(item1: T, item2: U)
+    where T: Summary,
+          U: Summary
+{
+```
+
+### Returning Types that Implement Traits
+
+```rust
+fn returns_summarizable() -> impl Summary {
+    Tweet {
+        username: String::from("horse_ebooks"),
+        content: String::from("of course, as you probably already know, people"),
+        reply: false,
+        retweet: false,
+    }
+    // NOTE: Only returning one single type.
+}
+```
+
+Returning either a `NewsArticle` or a `Tweet`:
+
+```rust
+fn returns_summarizable(switch: bool) -> Box<dyn Summary> {
+    if switch {
+        Box::new(NewsArticle { .. })
+    } else {
+        Box::new(Tweet { .. })
+    }
+}
+```
+
+### Fixing the `largest` Function with Trait Bounds
+
+```rust
+fn largest<T: PartialOrd + Copy>(list: &[T]) -> T {
+    let mut largest = list[0];
+
+    for &item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+```
+
+### Using Trait Bounds to Conditionally Implement Methods
+
+```rust
+// Conditional implementation
+impl<T: Display + PartialOrd> Pair<T> {
+    fn cmp_display(&self) {
+        // --snip--
+    }
+}
+
+//  blanket implementation
+impl<T: Display> ToString for T {
+    // --snip--
+}
+```
+
+## 10.2 Validating References with Lifetimes
+
+Every reference in Rust has a lifetime, which is the scope for which that reference is valid.
+
+### Preventing Dangling References with Lifetimes
+
+```rust
+{
+    let r;                // ---------+-- 'a
+                          //          |
+    {                     //          |
+        let x = 5;        // -+-- 'b  |
+        r = &x;           //  |       |
+    }                     // -+       |
+                          //          |
+    println!("r: {}", r); //          |
+}                         // ---------+
+```
+
+### Lifetime Annotation Syntax
+
+Lifetime annotations describe the relationships of the lifetimes of multiple references to each other without affecting the lifetimes.
+
+```rust
+// MEANING: For some lifetime `'a`,
+// `x` and `y` live at least as long as `'a`,
+// but the returned value lives at most as long.
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
+
+### Thinking in Terms of Lifetimes
+
+The way in which you need to specify lifetime parameters depends on what your function is doing.
+
+```rust
+// Good, the returned value only depends on `x`.
+fn longest<'a>(x: &'a str, y: &str) -> &'a str {
+    x
+}
+
+// Error, still dangling reference.
+fn longest<'a>(x: &str, y: &str) -> &'a str {
+    let result = String::from("really long string");
+    // FIX: return `result` instead
+    result.as_str()
+}
+```
+
+### Lifetime Annotations in Struct Definitions
+
+In addition to hold owned values, it's possible for structs to hold references.
+
+```rust
+// MEANING: ImportantExcerpt can’t outlive
+// the reference it holds in its part field.
+struct ImportantExcerpt<'a> {
+    part: &'a str,
+}
+
+impl<'a> ImportantExcerpt<'a> {
+    fn announce_and_return_part(&self, announcement: &str) -> &str {
+        self.part
+    }
+}
+```
+
+### Lifetime Elision
+
+1. The first rule is that each parameter that is a reference gets its own lifetime parameter.
+2. The second rule is if there is exactly one input lifetime parameter, that lifetime is assigned to all output lifetime parameters.
+3. The third rule is if there are multiple input lifetime parameters, but one of them is &self or &mut self because this is a method, the lifetime of self is assigned to all output lifetime parameters.
+
+### The Static Lifetime
+
+```rust
+let s: &'static str = "I have a static lifetime.";
+```
+
+## Generic Type Parameters, Trait Bounds, and Lifetimes Together
+
+```rust
+use std::fmt::Display;
+
+fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a str
+    where T: Display
+{
+    println!("Announcement! {}", ann);
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+```
