@@ -25,14 +25,14 @@ $ rustup doc --std
 # creating
 $ mkdir hello_world
 $ cd hello_world
-$ cat <<EOF >main.ts
+$ cat <<EOF >main.rs
 fn main() {
     println!("Hello, world!");
 }
 EOF
 
 # compiling
-$ rustc main.ts
+$ rustc main.rs
 
 # running
 $ ./main
@@ -54,6 +54,9 @@ $ cargo build
 
 # check
 $ cargo check
+
+# test
+$ cargo test
 
 # format
 $ cargo fmt
@@ -146,7 +149,7 @@ let r#fn = "this variable is named 'fn' even though that's a keyword";
 r#match();
 ```
 
-> Note: Use only for compatible purpose, when new keywords added.
+> GUIDE: Use only for backward compatible purpose.
 
 ## 3.1 Variables and Mutability
 
@@ -223,17 +226,12 @@ let c = b'A'; // `u8` only
 
 ```rust
 let tup: (i32, f64, u8) = (500, 6.4, 1);
-```
 
-```rust
+
 let tup: (i32,) = (500,);
-```
 
-```rust
 let tup = (500, 6.4, 1);
-```
 
-```rust
 let x: (i32, f64, u8) = (500, 6.4, 1);
 let five_hundred = x.0;
 let six_point_four = x.1;
@@ -243,10 +241,9 @@ let one = x.2;
 ### The array type
 
 ```rust
-let a: [i32; 5] = [1, 2, 3, 4, 5];
-```
+// [0, 0, 0, 0, 0]
+let a: [i32; 5] = [0; 5];
 
-```rust
 let a = [1, 2, 3, 4, 5];
 let first = a[0];
 let second = a[1];
@@ -510,7 +507,7 @@ Here are some of the types that are `Copy`, with a known, fixed size:
   - `(i32, i32)` is `Copy`
   - but `(i32, String)` is not.
 - Array of `Copy`, such as `[1, 2, 3]`.
-- Slices, such `&str`, `&[32]`
+- Slices and references, such `&str`, `&T`, `&[T]`
 
 > Note: Understanding `Copy`, `Clone`, `Drop`.
 
@@ -1070,10 +1067,10 @@ The Rust module system:
   - **`mod`**
   - **`pub`**
 - **Paths:**
-  - **`crate`**
-  - **`super`**
-  - **`self`**
-  - **`::`**
+  - **`crate`**: `~`
+  - **`super`**: `..`
+  - **`self`**: `.`
+  - **`::`**: `/`
 - **`use`**
   - **`as`**
   - **`{self, ...}`**
@@ -1398,7 +1395,7 @@ fn notify<T: Summary, U: Summary>(item1: T, item2: U) {
 // is same as:
 fn notify<T, U>(item1: T, item2: U)
     where T: Summary,
-          U: Summary
+          U: Summary,
 {
 ```
 
@@ -1536,7 +1533,7 @@ impl<'a> ImportantExcerpt<'a> {
 
 1. The first rule is that each parameter that is a reference gets its own lifetime parameter.
 2. The second rule is if there is exactly one input lifetime parameter, that lifetime is assigned to all output lifetime parameters.
-3. The third rule is if there are multiple input lifetime parameters, but one of them is &self or &mut self because this is a method, the lifetime of self is assigned to all output lifetime parameters.
+3. The third rule is if one of input lifetime parameters is `&self` or `&mut self` because of being a method, the lifetime of `self` is assigned to all output lifetime parameters.
 
 ### The Static Lifetime
 
